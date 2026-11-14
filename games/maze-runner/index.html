@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maze Runner | PLAYZONE</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#10101b;color:white;
+ font-family:Arial,sans-serif;text-align:center;
+ min-height:100vh;padding:20px;
+}
+header{display:flex;justify-content:space-between;align-items:center;
+ max-width:650px;margin:0 auto 25px}
+.logo{color:#9b83ff;font-size:25px;font-weight:bold}
+a{color:#aaa;text-decoration:none}
+h1{margin-bottom:8px}
+p{color:#aaa}
+.info{display:flex;justify-content:center;gap:25px;margin:20px}
+.info span{color:#a991ff;font-weight:bold}
+#maze{
+ display:grid;gap:3px;margin:20px auto;
+ width:min(90vw,450px);aspect-ratio:1;
+ background:#25243a;padding:5px;border-radius:10px;
+}
+.cell{background:#29283f;border-radius:3px}
+.wall{background:#6550a8}
+.player{background:#9b83ff;border-radius:50%;
+ box-shadow:0 0 12px #9b83ff}
+.exit{background:#22c98b;border-radius:5px}
+button{
+ border:0;background:#7957ff;color:white;
+ padding:12px 20px;border-radius:9px;
+ font-size:16px;font-weight:bold;cursor:pointer;
+}
+.controls{display:grid;grid-template-columns:repeat(3,55px);
+ gap:7px;justify-content:center;margin:20px auto}
+.controls button{padding:12px 0;font-size:20px}
+.controls .empty{visibility:hidden}
+#message{min-height:25px;color:#22c98b;font-weight:bold}
+</style>
+</head>
+<body>
+
+<header>
+ <div class="logo">PLAYZONE</div>
+ <a href="../../index.html">← Ana Sayfa</a>
+</header>
+
+<h1>👾 Maze Runner</h1>
+<p>Labirentte yolunu bul ve yeşil çıkışa ulaş!</p>
+
+<div class="info">
+ <div>Bölüm: <span id="level">1</span></div>
+ <div>Hamle: <span id="moves">0</span></div>
+</div>
+
+<div id="maze"></div>
+<div id="message">Başlamak için hareket et!</div>
+
+<div class="controls">
+ <span class="empty"></span>
+ <button onclick="move(0,-1)">▲</button>
+ <span class="empty"></span>
+ <button onclick="move(-1,0)">◀</button>
+ <button onclick="move(0,1)">▼</button>
+ <button onclick="move(1,0)">▶</button>
+</div>
+
+<button onclick="restart()">↻ Yeniden Başlat</button>
+
+<script>
+const maps = [
+[
+"##########",
+"#P...#...#",
+"###..#.#.#",
+"#....#.#.#",
+"#.####.#.#",
+"#......#.#",
+"#.######.#",
+"#........#",
+"######...#",
+"########E#"
+],
+[
+"##########",
+"#P#......#",
+"#.#.####.#",
+"#.#....#.#",
+"#.####.#.#",
+"#......#.#",
+"######.#.#",
+"#......#.#",
+"#.######.#",
+"#........E"
+],
+[
+"##########",
+"#P.......#",
+"#######..#",
+"#........#",
+"#.########",
+"#........#",
+"########.#",
+"#........#",
+"#.########",
+"#........E"
+]
+];
+
+let level=0, map=[], player={x:1,y:1}, moves=0, finished=false;
+const maze=document.getElementById("maze");
+
+function loadLevel(){
+ map=maps[level].map(row=>row.split(""));
+ moves=0;
+ finished=false;
+ map.forEach((row,y)=>row.forEach((cell,x)=>{
+  if(cell==="P"){player={x,y};map[y][x]="."}
+ }));
+ document.getElementById("level").textContent=level+1;
+ document.getElementById("moves").textContent=moves;
+ document.getElementById("message").textContent="Çıkışı bul!";
+ draw();
+}
+
+function draw(){
+ const size=map.length;
+ maze.style.gridTemplateColumns=`repeat(${map[0].length},1fr)`;
+ maze.innerHTML="";
+ map.forEach((row,y)=>row.forEach((cell,x)=>{
+  const el=document.createElement("div");
+  el.className="cell";
+  if(cell==="#")el.classList.add("wall");
+  if(cell==="E")el.classList.add("exit");
+  if(player.x===x&&player.y===y)el.classList.add("player");
+  maze.appendChild(el);
+ }));
+}
+
+function move(dx,dy){
+ if(finished)return;
+ const x=player.x+dx,y=player.y+dy;
+ if(y<0||y>=map.length||x<0||x>=map[0].length)return;
+ if(map[y][x]==="#")return;
+
+ player={x,y};
+ moves++;
+ document.getElementById("moves").textContent=moves;
+
+ if(map[y][x]==="E"){
+  finished=true;
+  if(level===maps.length-1){
+   document.getElementById("message").textContent="🏆 Tebrikler! Tüm bölümleri bitirdin!";
+  }else{
+   document.getElementById("message").textContent="🎉 Bölüm tamamlandı!";
+   setTimeout(()=>{
+    level++;
+    loadLevel();
+   },900);
+  }
+ }else{
+  document.getElementById("message").textContent="Güzel gidiyorsun!";
+ }
+ draw();
+}
+
+function restart(){
+ loadLevel();
+ document.getElementById("message").textContent="Tekrar başla!";
+}
+
+document.addEventListener("keydown",e=>{
+ const keys={
+  ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],
+  ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]
+ };
+ const key=e.key.length===1?e.key.toLowerCase():e.key;
+ if(keys[key]){
+  e.preventDefault();
+  move(...keys[key]);
+ }
+});
+
+loadLevel();
+</script>
+</body>
+</html>
