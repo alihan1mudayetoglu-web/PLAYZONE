@@ -8,38 +8,111 @@
 <style>
 *{box-sizing:border-box}
 body{
- margin:0;background:#10101b;color:white;
- font-family:Arial,sans-serif;text-align:center;
- min-height:100vh;padding:20px;
+ margin:0;
+ min-height:100vh;
+ padding:20px;
+ background:#10101b;
+ color:white;
+ font-family:Arial,sans-serif;
+ text-align:center;
 }
-header{display:flex;justify-content:space-between;align-items:center;
- max-width:650px;margin:0 auto 25px}
-.logo{color:#9b83ff;font-size:25px;font-weight:bold}
+header{
+ max-width:700px;
+ margin:0 auto 25px;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+}
+.logo{font-size:25px;font-weight:bold;color:#9b83ff}
 a{color:#aaa;text-decoration:none}
 h1{margin-bottom:8px}
 p{color:#aaa}
-.info{display:flex;justify-content:center;gap:25px;margin:20px}
+.info{
+ display:flex;
+ justify-content:center;
+ gap:30px;
+ margin:20px;
+}
 .info span{color:#a991ff;font-weight:bold}
 #maze{
- display:grid;gap:3px;margin:20px auto;
- width:min(90vw,450px);aspect-ratio:1;
- background:#25243a;padding:5px;border-radius:10px;
+ display:grid;
+ gap:3px;
+ width:min(90vw,450px);
+ aspect-ratio:1;
+ margin:20px auto;
+ padding:5px;
+ background:#25243a;
+ border-radius:10px;
 }
 .cell{background:#29283f;border-radius:3px}
 .wall{background:#6550a8}
-.player{background:#9b83ff;border-radius:50%;
- box-shadow:0 0 12px #9b83ff}
+.player{
+ background:#9b83ff;
+ border-radius:50%;
+ box-shadow:0 0 12px #9b83ff;
+}
 .exit{background:#22c98b;border-radius:5px}
 button{
- border:0;background:#7957ff;color:white;
- padding:12px 20px;border-radius:9px;
- font-size:16px;font-weight:bold;cursor:pointer;
+ border:0;
+ background:#7957ff;
+ color:white;
+ padding:12px 20px;
+ border-radius:9px;
+ font-size:16px;
+ font-weight:bold;
+ cursor:pointer;
 }
-.controls{display:grid;grid-template-columns:repeat(3,55px);
- gap:7px;justify-content:center;margin:20px auto}
+button:active{transform:scale(.95)}
+.controls{
+ display:grid;
+ grid-template-columns:repeat(3,55px);
+ gap:7px;
+ justify-content:center;
+ margin:20px auto;
+}
 .controls button{padding:12px 0;font-size:20px}
-.controls .empty{visibility:hidden}
-#message{min-height:25px;color:#22c98b;font-weight:bold}
+.empty{visibility:hidden}
+#message{
+ min-height:28px;
+ color:#22c98b;
+ font-weight:bold;
+ margin:12px;
+}
+#levelBar{
+ max-width:450px;
+ margin:15px auto;
+ display:grid;
+ grid-template-columns:repeat(10,1fr);
+ gap:5px;
+}
+.level-dot{
+ padding:7px 0;
+ border-radius:5px;
+ background:#29283f;
+ color:#aaa;
+ font-size:12px;
+}
+.level-dot.done{background:#22a879;color:white}
+.level-dot.current{background:#7957ff;color:white}
+#overlay{
+ display:none;
+ position:fixed;
+ inset:0;
+ background:#000b;
+ align-items:center;
+ justify-content:center;
+ padding:20px;
+}
+.panel{
+ background:#1b1a2b;
+ padding:30px;
+ border:1px solid #443b68;
+ border-radius:18px;
+ max-width:350px;
+ width:100%;
+}
+.panel h2{color:#a991ff}
+.panel p{line-height:1.5}
 </style>
 </head>
 <body>
@@ -53,12 +126,13 @@ button{
 <p>Labirentte yolunu bul ve yeşil çıkışa ulaş!</p>
 
 <div class="info">
- <div>Bölüm: <span id="level">1</span></div>
+ <div>Bölüm: <span id="level">1</span>/20</div>
  <div>Hamle: <span id="moves">0</span></div>
 </div>
 
+<div id="levelBar"></div>
 <div id="maze"></div>
-<div id="message">Başlamak için hareket et!</div>
+<div id="message">Çıkışı bulmak için hareket et!</div>
 
 <div class="controls">
  <span class="empty"></span>
@@ -71,8 +145,16 @@ button{
 
 <button onclick="restart()">↻ Yeniden Başlat</button>
 
+<div id="overlay">
+ <div class="panel">
+  <h2 id="overlayTitle">Bölüm Tamamlandı!</h2>
+  <p id="overlayText">Harika iş çıkardın!</p>
+  <button id="nextButton" onclick="nextLevel()">Sonraki Bölüm →</button>
+ </div>
+</div>
+
 <script>
-const maps = [
+const rawMaps = [
 [
 "##########",
 "#P...#...#",
@@ -108,77 +190,350 @@ const maps = [
 "#........#",
 "#.########",
 "#........E"
+],
+[
+"##########",
+"#P#......#",
+"#.#.####.#",
+"#.#....#.#",
+"#.####.#.#",
+"#......#.#",
+"#.######.#",
+"#........#",
+"#######..#",
+"########E#"
+],
+[
+"##########",
+"#P.......#",
+"#.######.#",
+"#......#.#",
+"######.#.#",
+"#......#.#",
+"#.######.#",
+"#........#",
+"#.########",
+"#........E"
+],
+[
+"##########",
+"#P#......#",
+"#.#.####.#",
+"#.#....#.#",
+"#.####.#.#",
+"#....#...#",
+"####.#.###",
+"#....#...#",
+"#.######.#",
+"#........E"
+],
+[
+"##########",
+"#P.......#",
+"####.###.#",
+"#....#...#",
+"#.####.#.#",
+"#......#.#",
+"######.#.#",
+"#........#",
+"#.########",
+"#........E"
+],
+[
+"##########",
+"#P#......#",
+"#.#.####.#",
+"#.#....#.#",
+"#.####.#.#",
+"#....#...#",
+"###..###.#",
+"#........#",
+"########.#",
+"########E#"
+],
+[
+"##########",
+"#P.......#",
+"#.######.#",
+"#......#.#",
+"######.#.#",
+"#........#",
+"#.########",
+"#........#",
+"#.######.#",
+"#........E"
+],
+[
+"##########",
+"#P#......#",
+"#.#.####.#",
+"#.#....#.#",
+"#.####.#.#",
+"#......#.#",
+"####.##..#",
+"#........#",
+"#.########",
+"#........E"
+],
+[
+"##########",
+"#P.......#",
+"#######..#",
+"#........#",
+"#.######.#",
+"#......#.#",
+"######.#.#",
+"#........#",
+"########.#",
+"########E#"
+],
+[
+"##########",
+"#P#......#",
+"#.#.####.#",
+"#.#....#.#",
+"#.####.#.#",
+"#......#.#",
+"###.######",
+"#........#",
+"#.########",
+"#........E"
+],
+[
+"##########",
+"#P.......#",
+"#.######.#",
+"#......#.#",
+"######.#.#",
+"#......#.#",
+"#.######.#",
+"#........#",
+"########.#",
+"########E#"
+],
+[
+"##########",
+"#P#......#",
+"#.#.####.#",
+"#.#....#.#",
+"#.####.#.#",
+"#......#.#",
+"######.###",
+"#........#",
+"#.########",
+"#........E"
+],
+[
+"##########",
+"#P.......#",
+"####.###.#",
+"#....#...#",
+"#.####.#.#",
+"#......#.#",
+"###.##.###",
+"#........#",
+"########.#",
+"########E#"
+],
+[
+"##########",
+"#P#......#",
+"#.#.####.#",
+"#.#....#.#",
+"#.####.#.#",
+"#....#...#",
+"####.###.#",
+"#........#",
+"#.########",
+"#........E"
+],
+[
+"##########",
+"#P.......#",
+"#.######.#",
+"#......#.#",
+"######.#.#",
+"#........#",
+"#.########",
+"#........#",
+"########.#",
+"########E#"
+],
+[
+"##########",
+"#P#......#",
+"#.#.####.#",
+"#.#....#.#",
+"#.####.#.#",
+"#......#.#",
+"###.######",
+"#........#",
+"########.#",
+"########E#"
+],
+[
+"##########",
+"#P.......#",
+"#######..#",
+"#........#",
+"#.######.#",
+"#......#.#",
+"######.#.#",
+"#........#",
+"#.########",
+"#........E"
+],
+[
+"##########",
+"#P.......#",
+"#.######.#",
+"#......#.#",
+"######.#.#",
+"#........#",
+"#.########",
+"#........#",
+"########.#",
+"########E#"
 ]
 ];
 
-let level=0, map=[], player={x:1,y:1}, moves=0, finished=false;
+let level=0;
+let map=[];
+let player={x:1,y:1};
+let moves=0;
+let finished=false;
+let completed=0;
+
 const maze=document.getElementById("maze");
+const overlay=document.getElementById("overlay");
 
 function loadLevel(){
- map=maps[level].map(row=>row.split(""));
+ map=rawMaps[level].map(row=>row.split(""));
  moves=0;
  finished=false;
- map.forEach((row,y)=>row.forEach((cell,x)=>{
-  if(cell==="P"){player={x,y};map[y][x]="."}
- }));
+
+ map.forEach((row,y)=>{
+  row.forEach((cell,x)=>{
+   if(cell==="P"){
+    player={x,y};
+    map[y][x]=".";
+   }
+  });
+ });
+
  document.getElementById("level").textContent=level+1;
  document.getElementById("moves").textContent=moves;
  document.getElementById("message").textContent="Çıkışı bul!";
+ overlay.style.display="none";
+ updateLevelBar();
  draw();
 }
 
 function draw(){
- const size=map.length;
  maze.style.gridTemplateColumns=`repeat(${map[0].length},1fr)`;
  maze.innerHTML="";
- map.forEach((row,y)=>row.forEach((cell,x)=>{
-  const el=document.createElement("div");
-  el.className="cell";
-  if(cell==="#")el.classList.add("wall");
-  if(cell==="E")el.classList.add("exit");
-  if(player.x===x&&player.y===y)el.classList.add("player");
-  maze.appendChild(el);
- }));
+
+ map.forEach((row,y)=>{
+  row.forEach((cell,x)=>{
+   const el=document.createElement("div");
+   el.className="cell";
+
+   if(cell==="#")el.classList.add("wall");
+   if(cell==="E")el.classList.add("exit");
+   if(player.x===x&&player.y===y)el.classList.add("player");
+
+   maze.appendChild(el);
+  });
+ });
+}
+
+function updateLevelBar(){
+ const bar=document.getElementById("levelBar");
+ bar.innerHTML="";
+
+ for(let i=0;i<20;i++){
+  const dot=document.createElement("div");
+  dot.className="level-dot";
+  dot.textContent=i+1;
+
+  if(i<completed)dot.classList.add("done");
+  if(i===level)dot.classList.add("current");
+
+  bar.appendChild(dot);
+ }
 }
 
 function move(dx,dy){
  if(finished)return;
- const x=player.x+dx,y=player.y+dy;
+
+ const x=player.x+dx;
+ const y=player.y+dy;
+
  if(y<0||y>=map.length||x<0||x>=map[0].length)return;
  if(map[y][x]==="#")return;
 
  player={x,y};
  moves++;
+
  document.getElementById("moves").textContent=moves;
 
  if(map[y][x]==="E"){
   finished=true;
-  if(level===maps.length-1){
-   document.getElementById("message").textContent="🏆 Tebrikler! Tüm bölümleri bitirdin!";
+  completed=Math.max(completed,level+1);
+  updateLevelBar();
+
+  if(level===19){
+   showOverlay(
+    "🏆 Tebrikler!",
+    "20 bölümün tamamını bitirdin! Sen gerçek bir Maze Runner ustasısın!",
+    "Oyunu Yeniden Oyna"
+   );
   }else{
-   document.getElementById("message").textContent="🎉 Bölüm tamamlandı!";
-   setTimeout(()=>{
-    level++;
-    loadLevel();
-   },900);
+   showOverlay(
+    "🎉 Bölüm Tamamlandı!",
+    `${level+1}. bölümü ${moves} hamlede bitirdin!`,
+    "Sonraki Bölüm →"
+   );
   }
  }else{
   document.getElementById("message").textContent="Güzel gidiyorsun!";
  }
+
  draw();
+}
+
+function showOverlay(title,text,buttonText){
+ document.getElementById("overlayTitle").textContent=title;
+ document.getElementById("overlayText").textContent=text;
+ document.getElementById("nextButton").textContent=buttonText;
+ overlay.style.display="flex";
+}
+
+function nextLevel(){
+ if(level===19){
+  level=0;
+  completed=0;
+ }else{
+  level++;
+ }
+ loadLevel();
 }
 
 function restart(){
  loadLevel();
- document.getElementById("message").textContent="Tekrar başla!";
+ document.getElementById("message").textContent="Bölüm yeniden başladı!";
 }
 
 document.addEventListener("keydown",e=>{
  const keys={
-  ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],
-  ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]
+  ArrowUp:[0,-1],w:[0,-1],
+  ArrowDown:[0,1],s:[0,1],
+  ArrowLeft:[-1,0],a:[-1,0],
+  ArrowRight:[1,0],d:[1,0]
  };
+
  const key=e.key.length===1?e.key.toLowerCase():e.key;
+
  if(keys[key]){
   e.preventDefault();
   move(...keys[key]);
