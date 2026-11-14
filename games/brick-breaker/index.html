@@ -1,0 +1,305 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brick Breaker | PLAYZONE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+ background:#090d18;color:white;font-family:Arial,sans-serif;
+ min-height:100vh;display:flex;justify-content:center;
+ align-items:center;padding:20px
+}
+.container{width:100%;max-width:650px;text-align:center}
+.back{display:inline-block;color:#aaa;text-decoration:none;margin-bottom:20px}
+h1{font-size:34px;margin-bottom:8px}
+h1 span{color:#7957ff}
+.subtitle{color:#929bb0;margin-bottom:20px}
+.scores{display:flex;gap:12px;margin-bottom:15px}
+.score-box{flex:1;background:#151e30;border:1px solid #28344a;padding:13px;border-radius:10px}
+.score-box p{font-size:12px;color:#929bb0;margin-bottom:7px}
+.score-box strong{font-size:22px;color:#a58fff}
+.game-area{position:relative;width:100%;background:#111827;border:2px solid #34435c;border-radius:12px;overflow:hidden}
+canvas{display:block;width:100%;height:auto;touch-action:none}
+.overlay{
+ position:absolute;inset:0;background:#080d18df;
+ display:flex;flex-direction:column;align-items:center;
+ justify-content:center;gap:15px
+}
+.overlay.hidden{display:none}
+.overlay h2{font-size:30px}
+.overlay p{color:#b1b9cb}
+button{border:0;cursor:pointer;font-weight:bold}
+.main-btn{background:#7957ff;color:white;padding:14px 28px;border-radius:9px;font-size:15px}
+.main-btn:hover{background:#9279ff}
+.mobile-controls{display:flex;justify-content:center;gap:15px;margin-top:18px}
+.mobile-controls button{background:#1a2540;color:white;border:1px solid #354366;border-radius:10px;padding:14px 30px;font-size:20px}
+.tip{color:#929bb0;font-size:13px;margin-top:18px;line-height:1.7}
+</style>
+</head>
+<body>
+
+<div class="container">
+<a href="../../index.html" class="back">← Ana Sayfaya Dön</a>
+<h1>🧱 <span>Brick Breaker</span></h1>
+<p class="subtitle">Topu sektir, tuğlaları kır ve kazan!</p>
+
+<div class="scores">
+ <div class="score-box"><p>SKOR</p><strong id="score">0</strong></div>
+ <div class="score-box"><p>CAN</p><strong id="lives">3</strong></div>
+ <div class="score-box"><p>SEVİYE</p><strong id="level">1</strong></div>
+</div>
+
+<div class="game-area">
+<canvas id="game" width="600" height="450"></canvas>
+<div class="overlay" id="overlay">
+ <h2 id="title">🧱 Brick Breaker</h2>
+ <p id="message">Bütün tuğlaları kırmaya hazır mısın?</p>
+ <button class="main-btn" id="start">Oyuna Başla</button>
+</div>
+</div>
+
+<div class="mobile-controls">
+ <button id="left">◀</button>
+ <button id="right">▶</button>
+</div>
+
+<p class="tip">Bilgisayar: Fare veya ← → tuşları<br>Telefon: Alt taraftaki butonları kullan.</p>
+</div>
+
+<script>
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+const scoreEl=document.getElementById("score");
+const livesEl=document.getElementById("lives");
+const levelEl=document.getElementById("level");
+const overlay=document.getElementById("overlay");
+const startBtn=document.getElementById("start");
+
+const W=600,H=450;
+const paddle={x:250,y:415,w:100,h:12,speed:8};
+const ball={x:300,y:395,r:8,dx:4,dy:-4};
+let bricks=[];
+let score=0,lives=3,level=1;
+let running=false,animation=null;
+let leftPressed=false,rightPressed=false;
+let mouseX=null;
+
+const colors=["#ff5577","#ff9f43","#feca57","#48dbfb","#a78bfa"];
+
+function createBricks(){
+ bricks=[];
+ const rows=Math.min(3+level,6);
+ const cols=10;
+ for(let r=0;r<rows;r++){
+  for(let c=0;c<cols;c++){
+   bricks.push({
+    x:20+c*56,
+    y:45+r*28,
+    w:48,h:18,
+    color:colors[r%colors.length],
+    alive:true
+   });
+  }
+ }
+}
+
+function resetBall(){
+ ball.x=300;
+ ball.y=395;
+ ball.dx=(Math.random()>.5?1:-1)*(3+level*.3);
+ ball.dy=-(3+level*.3);
+ paddle.x=250;
+}
+
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ ctx.fillStyle="#111827";
+ ctx.fillRect(0,0,W,H);
+
+ // Tuğlalar
+ bricks.forEach(b=>{
+  if(!b.alive)return;
+  ctx.fillStyle=b.color;
+  ctx.shadowColor=b.color;
+  ctx.shadowBlur=9;
+  ctx.beginPath();
+  ctx.roundRect(b.x,b.y,b.w,b.h,5);
+  ctx.fill();
+ });
+ ctx.shadowBlur=0;
+
+ // Platform
+ ctx.fillStyle="#9279ff";
+ ctx.shadowColor="#7957ff";
+ ctx.shadowBlur=15;
+ ctx.beginPath();
+ ctx.roundRect(paddle.x,paddle.y,paddle.w,paddle.h,6);
+ ctx.fill();
+ ctx.shadowBlur=0;
+
+ // Top
+ ctx.fillStyle="#fff";
+ ctx.shadowColor="#a78bfa";
+ ctx.shadowBlur=16;
+ ctx.beginPath();
+ ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);
+ ctx.fill();
+ ctx.shadowBlur=0;
+}
+
+function update(){
+ if(!running)return;
+
+ if(leftPressed)paddle.x-=paddle.speed;
+ if(rightPressed)paddle.x+=paddle.speed;
+
+ if(mouseX!==null){
+  paddle.x=mouseX-paddle.w/2;
+ }
+
+ paddle.x=Math.max(0,Math.min(W-paddle.w,paddle.x));
+
+ ball.x+=ball.dx;
+ ball.y+=ball.dy;
+
+ // Duvarlar
+ if(ball.x-ball.r<0||ball.x+ball.r>W)ball.dx*=-1;
+ if(ball.y-ball.r<0)ball.dy*=-1;
+
+ // Platform çarpışması
+ if(
+  ball.dy>0&&
+  ball.y+ball.r>=paddle.y&&
+  ball.y-ball.r<=paddle.y+paddle.h&&
+  ball.x>=paddle.x&&
+  ball.x<=paddle.x+paddle.w
+ ){
+  const hit=(ball.x-(paddle.x+paddle.w/2))/(paddle.w/2);
+  ball.dx=hit*5;
+  ball.dy=-Math.sqrt(Math.max(8,ball.dx*ball.dx+ball.dy*ball.dy));
+ }
+
+ // Tuğla çarpışması
+ for(const b of bricks){
+  if(!b.alive)continue;
+
+  if(
+   ball.x+ball.r>b.x&&
+   ball.x-ball.r<b.x+b.w&&
+   ball.y+ball.r>b.y&&
+   ball.y-ball.r<b.y+b.h
+  ){
+   b.alive=false;
+   ball.dy*=-1;
+   score+=10;
+   scoreEl.textContent=score;
+   break;
+  }
+ }
+
+ // Top düştü
+ if(ball.y-ball.r>H){
+  lives--;
+  livesEl.textContent=lives;
+
+  if(lives<=0){
+   endGame(false);
+   return;
+  }
+  resetBall();
+ }
+
+ // Bölüm tamamlandı
+ if(bricks.every(b=>!b.alive)){
+  level++;
+  levelEl.textContent=level;
+  createBricks();
+  resetBall();
+ }
+
+ draw();
+ animation=requestAnimationFrame(update);
+}
+
+function startGame(){
+ if(animation)cancelAnimationFrame(animation);
+
+ score=0;
+ lives=3;
+ level=1;
+ scoreEl.textContent=score;
+ livesEl.textContent=lives;
+ levelEl.textContent=level;
+
+ createBricks();
+ resetBall();
+ running=true;
+ overlay.classList.add("hidden");
+ draw();
+ animation=requestAnimationFrame(update);
+}
+
+function endGame(won){
+ running=false;
+ if(animation)cancelAnimationFrame(animation);
+
+ document.getElementById("title").textContent=
+  won?"🎉 Kazandın!":"Oyun Bitti!";
+ document.getElementById("message").textContent=
+  "Toplam skorun: "+score;
+ startBtn.textContent="Tekrar Oyna";
+ overlay.classList.remove("hidden");
+ draw();
+}
+
+function moveLeft(value){leftPressed=value}
+function moveRight(value){rightPressed=value}
+
+document.addEventListener("keydown",e=>{
+ if(["ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();
+ if(e.key==="ArrowLeft"||e.key==="a")moveLeft(true);
+ if(e.key==="ArrowRight"||e.key==="d")moveRight(true);
+});
+
+document.addEventListener("keyup",e=>{
+ if(e.key==="ArrowLeft"||e.key==="a")moveLeft(false);
+ if(e.key==="ArrowRight"||e.key==="d")moveRight(false);
+});
+
+canvas.addEventListener("pointermove",e=>{
+ const rect=canvas.getBoundingClientRect();
+ mouseX=(e.clientX-rect.left)*W/rect.width;
+});
+
+canvas.addEventListener("pointerleave",()=>{
+ mouseX=null;
+});
+
+function bindButton(id,direction){
+ const btn=document.getElementById(id);
+ btn.addEventListener("pointerdown",e=>{
+  e.preventDefault();
+  direction==="left"?moveLeft(true):moveRight(true);
+ });
+ ["pointerup","pointerleave","pointercancel"].forEach(event=>{
+  btn.addEventListener(event,()=>{
+   direction==="left"?moveLeft(false):moveRight(false);
+  });
+ });
+}
+
+bindButton("left","left");
+bindButton("right","right");
+
+startBtn.addEventListener("click",startGame);
+
+createBricks();
+resetBall();
+draw();
+</script>
+</body>
+</html>
