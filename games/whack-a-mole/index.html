@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whack a Mole | PLAYZONE</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#090d18;color:white;
+ font-family:Arial,sans-serif;text-align:center;padding:25px;
+}
+a{color:#a995ff;text-decoration:none}
+header{display:flex;justify-content:space-between;max-width:750px;margin:auto}
+main{
+ max-width:650px;margin:45px auto;background:#141c2c;
+ padding:25px;border-radius:20px;border:1px solid #303b52;
+}
+h1{font-size:35px}
+.stats{display:flex;justify-content:center;gap:20px;margin:25px}
+.stat{background:#090d18;padding:15px;border-radius:12px}
+.stat b{display:block;font-size:25px;margin-top:5px}
+button{
+ background:#7957ff;color:white;border:0;padding:13px 25px;
+ border-radius:10px;font-weight:bold;cursor:pointer;font-size:16px;
+}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:430px;margin:25px auto}
+.hole{
+ height:110px;border-radius:50%;background:#302b43;
+ display:grid;place-items:center;font-size:0;cursor:pointer;
+}
+.hole.mole{font-size:55px}
+#message{color:#c4b5fd;min-height:25px}
+@media(max-width:450px){.hole{height:85px}}
+</style>
+</head>
+<body>
+
+<header>
+<a href="../../index.html"><b>PLAYZONE</b></a>
+<a href="../../index.html">← Ana Sayfa</a>
+</header>
+
+<main>
+<h1>🐹 Whack a Mole</h1>
+<p>Köstebekleri yakala ve puan topla!</p>
+
+<div class="stats">
+<div class="stat">PUAN<b id="score">0</b></div>
+<div class="stat">SÜRE<b id="time">30</b></div>
+<div class="stat">REKOR<b id="best">0</b></div>
+</div>
+
+<button id="start">Oyuna Başla</button>
+
+<div class="grid" id="grid"></div>
+<div id="message">Başlamak için butona bas!</div>
+</main>
+
+<script>
+const grid=document.getElementById("grid");
+const scoreEl=document.getElementById("score");
+const timeEl=document.getElementById("time");
+const bestEl=document.getElementById("best");
+const message=document.getElementById("message");
+const start=document.getElementById("start");
+
+let score=0,time=30,active=-1,playing=false;
+let timer,spawner;
+
+bestEl.textContent=localStorage.getItem("moleBest")||0;
+
+for(let i=0;i<9;i++){
+ const hole=document.createElement("div");
+ hole.className="hole";
+ hole.dataset.id=i;
+
+ hole.onclick=()=>{
+  if(playing && Number(hole.dataset.id)===active){
+   score++;
+   scoreEl.textContent=score;
+   hole.classList.remove("mole");
+   hole.textContent="";
+   active=-1;
+  }
+ };
+
+ grid.appendChild(hole);
+}
+
+const holes=[...document.querySelectorAll(".hole")];
+
+function showMole(){
+ holes.forEach(h=>{
+  h.classList.remove("mole");
+  h.textContent="";
+ });
+
+ active=Math.floor(Math.random()*9);
+ holes[active].textContent="🐹";
+ holes[active].classList.add("mole");
+}
+
+function endGame(){
+ playing=false;
+ clearInterval(timer);
+ clearInterval(spawner);
+
+ holes.forEach(h=>{
+  h.classList.remove("mole");
+  h.textContent="";
+ });
+
+ let best=Number(localStorage.getItem("moleBest")||0);
+
+ if(score>best){
+  localStorage.setItem("moleBest",score);
+  best=score;
+ }
+
+ bestEl.textContent=best;
+ message.textContent="Oyun bitti! Puanın: "+score;
+ start.disabled=false;
+ start.textContent="Tekrar Oyna";
+}
+
+start.onclick=()=>{
+ clearInterval(timer);
+ clearInterval(spawner);
+
+ score=0;
+ time=30;
+ playing=true;
+
+ scoreEl.textContent=0;
+ timeEl.textContent=30;
+ start.disabled=true;
+
+ message.textContent="Köstebekleri yakala!";
+ showMole();
+
+ spawner=setInterval(showMole,850);
+
+ timer=setInterval(()=>{
+  time--;
+  timeEl.textContent=time;
+
+  if(time<=0)endGame();
+ },1000);
+};
+</script>
+</body>
+</html>
