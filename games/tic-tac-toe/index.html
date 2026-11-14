@@ -13,36 +13,43 @@ body{
  font-family:Arial,sans-serif;text-align:center;
 }
 header{
- max-width:650px;margin:0 auto 35px;
+ max-width:650px;margin:0 auto 30px;
  display:flex;justify-content:space-between;align-items:center;
 }
 .logo{font-size:25px;font-weight:bold;color:#9b83ff}
 a{color:#aaa;text-decoration:none}
 h1{margin-bottom:8px}
 p{color:#aaa}
+.settings{
+ background:#1c1b2c;border:1px solid #34314d;
+ border-radius:14px;padding:18px;
+ max-width:390px;margin:20px auto;
+}
+select{
+ background:#29283f;color:white;border:1px solid #554b80;
+ padding:11px;border-radius:8px;font-size:15px;
+ margin:8px;max-width:100%;
+}
 .scoreboard{
- display:flex;justify-content:center;gap:15px;
- margin:25px auto;
+ display:flex;justify-content:center;gap:10px;
+ margin:20px auto;
 }
 .score{
- background:#1c1b2c;padding:15px 25px;
- border-radius:12px;min-width:100px;
+ background:#1c1b2c;padding:12px 18px;
+ border-radius:12px;min-width:90px;
  border:1px solid #34314d;
 }
-.score strong{display:block;font-size:25px;margin-top:8px}
+.score strong{display:block;font-size:24px;margin-top:7px}
 .x{color:#9b83ff}
 .o{color:#22c98b}
 #status{font-size:18px;font-weight:bold;margin:20px}
 .board{
  display:grid;grid-template-columns:repeat(3,1fr);
- gap:10px;width:min(90vw,390px);
- margin:20px auto;
+ gap:10px;width:min(90vw,390px);margin:20px auto;
 }
 .cell{
- aspect-ratio:1;
- border:1px solid #403b60;
- background:#1c1b2c;
- border-radius:15px;
+ aspect-ratio:1;border:1px solid #403b60;
+ background:#1c1b2c;border-radius:15px;
  color:white;font-size:clamp(45px,12vw,75px);
  font-weight:bold;cursor:pointer;
 }
@@ -52,11 +59,11 @@ p{color:#aaa}
 .cell.winner{background:#353052;border-color:#9b83ff}
 button.action{
  border:0;background:#7957ff;color:white;
- padding:13px 22px;border-radius:9px;
- font-size:16px;font-weight:bold;cursor:pointer;
- margin:5px;
+ padding:13px 18px;border-radius:9px;
+ font-size:15px;font-weight:bold;cursor:pointer;margin:5px;
 }
 button.action:hover{background:#6242db}
+#difficultyBox{display:none}
 </style>
 </head>
 <body>
@@ -67,15 +74,34 @@ button.action:hover{background:#6242db}
 </header>
 
 <h1>⭕ Tic Tac Toe</h1>
-<p>Arkadaşınla karşı karşıya gel ve kazan!</p>
+<p>Arkadaşına veya bilgisayara karşı oyna!</p>
+
+<div class="settings">
+ <div>
+  <label for="mode">Oyun Modu:</label><br>
+  <select id="mode" onchange="changeMode()">
+   <option value="bot">🤖 Bilgisayara Karşı</option>
+   <option value="two">👥 2 Kişilik</option>
+  </select>
+ </div>
+
+ <div id="difficultyBox">
+  <label for="difficulty">Bot Zorluğu:</label><br>
+  <select id="difficulty" onchange="newGame()">
+   <option value="easy">Kolay</option>
+   <option value="medium" selected>Orta</option>
+   <option value="hard">Zor</option>
+  </select>
+ </div>
+</div>
 
 <div class="scoreboard">
  <div class="score">
-  <span class="x">Oyuncu X</span>
+  <span class="x" id="labelX">Sen (X)</span>
   <strong id="scoreX">0</strong>
  </div>
  <div class="score">
-  <span class="o">Oyuncu O</span>
+  <span class="o" id="labelO">Bot (O)</span>
   <strong id="scoreO">0</strong>
  </div>
  <div class="score">
@@ -84,18 +110,18 @@ button.action:hover{background:#6242db}
  </div>
 </div>
 
-<div id="status" class="x">Sıra: X</div>
+<div id="status" class="x">Senin sıran (X)</div>
 
 <div class="board" id="board">
- <button class="cell" data-index="0"></button>
- <button class="cell" data-index="1"></button>
- <button class="cell" data-index="2"></button>
- <button class="cell" data-index="3"></button>
- <button class="cell" data-index="4"></button>
- <button class="cell" data-index="5"></button>
- <button class="cell" data-index="6"></button>
- <button class="cell" data-index="7"></button>
- <button class="cell" data-index="8"></button>
+ <button class="cell" data-index="0" aria-label="Kare 1"></button>
+ <button class="cell" data-index="1" aria-label="Kare 2"></button>
+ <button class="cell" data-index="2" aria-label="Kare 3"></button>
+ <button class="cell" data-index="3" aria-label="Kare 4"></button>
+ <button class="cell" data-index="4" aria-label="Kare 5"></button>
+ <button class="cell" data-index="5" aria-label="Kare 6"></button>
+ <button class="cell" data-index="6" aria-label="Kare 7"></button>
+ <button class="cell" data-index="7" aria-label="Kare 8"></button>
+ <button class="cell" data-index="8" aria-label="Kare 9"></button>
 </div>
 
 <button class="action" onclick="newGame()">↻ Yeni Tur</button>
@@ -104,6 +130,8 @@ button.action:hover{background:#6242db}
 <script>
 const cells=[...document.querySelectorAll(".cell")];
 const statusText=document.getElementById("status");
+const modeSelect=document.getElementById("mode");
+const difficultySelect=document.getElementById("difficulty");
 
 const wins=[
  [0,1,2],[3,4,5],[6,7,8],
@@ -114,8 +142,13 @@ const wins=[
 let board=Array(9).fill("");
 let current="X";
 let gameOver=false;
-
+let botThinking=false;
+let botTimer=null;
 let scores={X:0,O:0,draw:0};
+
+function isBotMode(){
+ return modeSelect.value==="bot";
+}
 
 function updateScores(){
  document.getElementById("scoreX").textContent=scores.X;
@@ -123,47 +156,186 @@ function updateScores(){
  document.getElementById("scoreDraw").textContent=scores.draw;
 }
 
-function checkWinner(){
- for(const combination of wins){
-  const [a,b,c]=combination;
-  if(board[a]&&board[a]===board[b]&&board[a]===board[c]){
-   return combination;
+function changeMode(){
+ document.getElementById("difficultyBox").style.display=
+  isBotMode()?"block":"none";
+
+ document.getElementById("labelX").textContent=
+  isBotMode()?"Sen (X)":"Oyuncu X";
+
+ document.getElementById("labelO").textContent=
+  isBotMode()?"Bot (O)":"Oyuncu O";
+
+ newGame();
+}
+
+function checkWinner(b=board){
+ for(const line of wins){
+  const [a,c,d]=line;
+  if(b[a]&&b[a]===b[c]&&b[a]===b[d]){
+   return {player:b[a],line};
   }
  }
  return null;
 }
 
-function play(index){
- if(gameOver||board[index])return;
+function render(){
+ cells.forEach((cell,i)=>{
+  cell.textContent=board[i];
+  cell.className="cell";
+  if(board[i])cell.classList.add(board[i].toLowerCase());
+ });
+}
 
- board[index]=current;
- cells[index].textContent=current;
- cells[index].classList.add(current.toLowerCase());
+function finishRound(result){
+ gameOver=true;
+ botThinking=false;
 
- const winningLine=checkWinner();
-
- if(winningLine){
-  gameOver=true;
-  winningLine.forEach(i=>cells[i].classList.add("winner"));
-  scores[current]++;
+ if(result){
+  result.line.forEach(i=>cells[i].classList.add("winner"));
+  scores[result.player]++;
   updateScores();
-  statusText.textContent="🏆 Oyuncu "+current+" kazandı!";
-  statusText.className=current.toLowerCase();
-  return;
- }
 
- if(board.every(cell=>cell!=="")){
-  gameOver=true;
+  if(isBotMode()){
+   statusText.textContent=result.player==="X"?
+    "🏆 Kazandın!":"🤖 Bot kazandı!";
+  }else{
+   statusText.textContent="🏆 Oyuncu "+result.player+" kazandı!";
+  }
+  statusText.className=result.player.toLowerCase();
+ }else{
   scores.draw++;
   updateScores();
   statusText.textContent="🤝 Berabere!";
   statusText.className="";
-  return;
+ }
+}
+
+function makeMove(index,player){
+ if(gameOver||board[index])return false;
+
+ board[index]=player;
+ render();
+
+ const result=checkWinner();
+ if(result){
+  finishRound(result);
+  return true;
  }
 
- current=current==="X"?"O":"X";
- statusText.textContent="Sıra: "+current;
- statusText.className=current.toLowerCase();
+ if(board.every(v=>v!=="")){
+  finishRound(null);
+  return true;
+ }
+
+ return false;
+}
+
+function play(index){
+ if(gameOver||botThinking||board[index])return;
+ if(isBotMode()&&current==="O")return;
+
+ makeMove(index,"X");
+
+ if(gameOver)return;
+
+ if(isBotMode()){
+  current="O";
+  botThinking=true;
+  statusText.textContent="🤖 Bot düşünüyor...";
+  statusText.className="o";
+
+  botTimer=setTimeout(()=>{
+   botTimer=null;
+   botThinking=false;
+
+   const choice=chooseBotMove();
+   if(choice!==-1)makeMove(choice,"O");
+
+   if(!gameOver){
+    current="X";
+    statusText.textContent="Senin sıran (X)";
+    statusText.className="x";
+   }
+  },550);
+ }else{
+  current=current==="X"?"O":"X";
+  statusText.textContent="Sıra: "+current;
+  statusText.className=current.toLowerCase();
+ }
+}
+
+function availableMoves(b){
+ return b.map((v,i)=>v===""?i:-1).filter(i=>i!==-1);
+}
+
+function findWinningMove(b,player){
+ for(const i of availableMoves(b)){
+  const copy=[...b];
+  copy[i]=player;
+  if(checkWinner(copy))return i;
+ }
+ return -1;
+}
+
+function chooseBotMove(){
+ const difficulty=difficultySelect.value;
+ const available=availableMoves(board);
+
+ if(!available.length)return -1;
+
+ if(difficulty==="easy"){
+  return available[Math.floor(Math.random()*available.length)];
+ }
+
+ // Önce kazanabileceği hamleyi kontrol et.
+ const win=findWinningMove(board,"O");
+ if(win!==-1)return win;
+
+ // Oyuncunun kazanmasını engelle.
+ const block=findWinningMove(board,"X");
+ if(block!==-1)return block;
+
+ if(difficulty==="medium"){
+  if(board[4]==="")return 4;
+
+  const corners=[0,2,6,8].filter(i=>board[i]==="");
+  if(corners.length&&Math.random()<0.6){
+   return corners[Math.floor(Math.random()*corners.length)];
+  }
+
+  return available[Math.floor(Math.random()*available.length)];
+ }
+
+ // Zor mod: Minimax algoritması.
+ return minimax([...board],"O").index;
+}
+
+function minimax(b,player){
+ const result=checkWinner(b);
+
+ if(result){
+  return {score:result.player==="O"?10:-10,index:-1};
+ }
+
+ const available=availableMoves(b);
+ if(!available.length)return {score:0,index:-1};
+
+ const moves=[];
+
+ for(const index of available){
+  const copy=[...b];
+  copy[index]=player;
+
+  const next=minimax(copy,player==="O"?"X":"O");
+  moves.push({index,score:next.score});
+ }
+
+ if(player==="O"){
+  return moves.reduce((best,m)=>m.score>best.score?m:best);
+ }else{
+  return moves.reduce((best,m)=>m.score<best.score?m:best);
+ }
 }
 
 cells.forEach((cell,index)=>{
@@ -171,16 +343,16 @@ cells.forEach((cell,index)=>{
 });
 
 function newGame(){
+ clearTimeout(botTimer);
+ botTimer=null;
  board=Array(9).fill("");
  current="X";
  gameOver=false;
+ botThinking=false;
 
- cells.forEach(cell=>{
-  cell.textContent="";
-  cell.className="cell";
- });
+ render();
 
- statusText.textContent="Sıra: X";
+ statusText.textContent=isBotMode()?"Senin sıran (X)":"Sıra: X";
  statusText.className="x";
 }
 
@@ -189,6 +361,8 @@ function resetScores(){
  updateScores();
  newGame();
 }
+
+changeMode();
 </script>
 
 </body>
