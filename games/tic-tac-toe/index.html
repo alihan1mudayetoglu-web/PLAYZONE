@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tic Tac Toe | PLAYZONE</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;min-height:100vh;padding:20px;
+ background:#10101b;color:white;
+ font-family:Arial,sans-serif;text-align:center;
+}
+header{
+ max-width:650px;margin:0 auto 35px;
+ display:flex;justify-content:space-between;align-items:center;
+}
+.logo{font-size:25px;font-weight:bold;color:#9b83ff}
+a{color:#aaa;text-decoration:none}
+h1{margin-bottom:8px}
+p{color:#aaa}
+.scoreboard{
+ display:flex;justify-content:center;gap:15px;
+ margin:25px auto;
+}
+.score{
+ background:#1c1b2c;padding:15px 25px;
+ border-radius:12px;min-width:100px;
+ border:1px solid #34314d;
+}
+.score strong{display:block;font-size:25px;margin-top:8px}
+.x{color:#9b83ff}
+.o{color:#22c98b}
+#status{font-size:18px;font-weight:bold;margin:20px}
+.board{
+ display:grid;grid-template-columns:repeat(3,1fr);
+ gap:10px;width:min(90vw,390px);
+ margin:20px auto;
+}
+.cell{
+ aspect-ratio:1;
+ border:1px solid #403b60;
+ background:#1c1b2c;
+ border-radius:15px;
+ color:white;font-size:clamp(45px,12vw,75px);
+ font-weight:bold;cursor:pointer;
+}
+.cell:hover{background:#292640}
+.cell.x{color:#9b83ff}
+.cell.o{color:#22c98b}
+.cell.winner{background:#353052;border-color:#9b83ff}
+button.action{
+ border:0;background:#7957ff;color:white;
+ padding:13px 22px;border-radius:9px;
+ font-size:16px;font-weight:bold;cursor:pointer;
+ margin:5px;
+}
+button.action:hover{background:#6242db}
+</style>
+</head>
+<body>
+
+<header>
+ <div class="logo">PLAYZONE</div>
+ <a href="../../index.html">← Ana Sayfa</a>
+</header>
+
+<h1>⭕ Tic Tac Toe</h1>
+<p>Arkadaşınla karşı karşıya gel ve kazan!</p>
+
+<div class="scoreboard">
+ <div class="score">
+  <span class="x">Oyuncu X</span>
+  <strong id="scoreX">0</strong>
+ </div>
+ <div class="score">
+  <span class="o">Oyuncu O</span>
+  <strong id="scoreO">0</strong>
+ </div>
+ <div class="score">
+  <span>Beraberlik</span>
+  <strong id="scoreDraw">0</strong>
+ </div>
+</div>
+
+<div id="status" class="x">Sıra: X</div>
+
+<div class="board" id="board">
+ <button class="cell" data-index="0"></button>
+ <button class="cell" data-index="1"></button>
+ <button class="cell" data-index="2"></button>
+ <button class="cell" data-index="3"></button>
+ <button class="cell" data-index="4"></button>
+ <button class="cell" data-index="5"></button>
+ <button class="cell" data-index="6"></button>
+ <button class="cell" data-index="7"></button>
+ <button class="cell" data-index="8"></button>
+</div>
+
+<button class="action" onclick="newGame()">↻ Yeni Tur</button>
+<button class="action" onclick="resetScores()">Skorları Sıfırla</button>
+
+<script>
+const cells=[...document.querySelectorAll(".cell")];
+const statusText=document.getElementById("status");
+
+const wins=[
+ [0,1,2],[3,4,5],[6,7,8],
+ [0,3,6],[1,4,7],[2,5,8],
+ [0,4,8],[2,4,6]
+];
+
+let board=Array(9).fill("");
+let current="X";
+let gameOver=false;
+
+let scores={X:0,O:0,draw:0};
+
+function updateScores(){
+ document.getElementById("scoreX").textContent=scores.X;
+ document.getElementById("scoreO").textContent=scores.O;
+ document.getElementById("scoreDraw").textContent=scores.draw;
+}
+
+function checkWinner(){
+ for(const combination of wins){
+  const [a,b,c]=combination;
+  if(board[a]&&board[a]===board[b]&&board[a]===board[c]){
+   return combination;
+  }
+ }
+ return null;
+}
+
+function play(index){
+ if(gameOver||board[index])return;
+
+ board[index]=current;
+ cells[index].textContent=current;
+ cells[index].classList.add(current.toLowerCase());
+
+ const winningLine=checkWinner();
+
+ if(winningLine){
+  gameOver=true;
+  winningLine.forEach(i=>cells[i].classList.add("winner"));
+  scores[current]++;
+  updateScores();
+  statusText.textContent="🏆 Oyuncu "+current+" kazandı!";
+  statusText.className=current.toLowerCase();
+  return;
+ }
+
+ if(board.every(cell=>cell!=="")){
+  gameOver=true;
+  scores.draw++;
+  updateScores();
+  statusText.textContent="🤝 Berabere!";
+  statusText.className="";
+  return;
+ }
+
+ current=current==="X"?"O":"X";
+ statusText.textContent="Sıra: "+current;
+ statusText.className=current.toLowerCase();
+}
+
+cells.forEach((cell,index)=>{
+ cell.addEventListener("click",()=>play(index));
+});
+
+function newGame(){
+ board=Array(9).fill("");
+ current="X";
+ gameOver=false;
+
+ cells.forEach(cell=>{
+  cell.textContent="";
+  cell.className="cell";
+ });
+
+ statusText.textContent="Sıra: X";
+ statusText.className="x";
+}
+
+function resetScores(){
+ scores={X:0,O:0,draw:0};
+ updateScores();
+ newGame();
+}
+</script>
+
+</body>
+</html>
