@@ -1,0 +1,433 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2048 | PLAYZONE</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+ background:#090d18;
+ color:white;
+ font-family:Arial,sans-serif;
+ min-height:100vh;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:20px;
+}
+
+.container{
+ width:100%;
+ max-width:460px;
+ text-align:center;
+}
+
+.back{
+ display:inline-block;
+ color:#aaa;
+ text-decoration:none;
+ margin-bottom:22px;
+}
+
+h1{
+ font-size:42px;
+ margin-bottom:8px;
+}
+
+h1 span{color:#a78bfa}
+
+.subtitle{
+ color:#929bb0;
+ margin-bottom:22px;
+}
+
+.scores{
+ display:flex;
+ gap:12px;
+ margin-bottom:18px;
+}
+
+.score-box{
+ flex:1;
+ background:#151e30;
+ border:1px solid #28344a;
+ padding:13px;
+ border-radius:10px;
+}
+
+.score-box p{
+ font-size:12px;
+ color:#929bb0;
+ margin-bottom:7px;
+}
+
+.score-box strong{
+ font-size:23px;
+ color:#a78bfa;
+}
+
+.top-buttons{
+ display:flex;
+ gap:10px;
+ margin-bottom:15px;
+}
+
+button{
+ border:0;
+ cursor:pointer;
+ font-weight:bold;
+}
+
+.top-buttons button{
+ flex:1;
+ padding:12px;
+ border-radius:9px;
+ color:white;
+ background:#7957ff;
+}
+
+.top-buttons button:hover{background:#9279ff}
+
+.board{
+ background:#192238;
+ padding:10px;
+ border-radius:13px;
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:9px;
+ touch-action:none;
+ user-select:none;
+}
+
+.cell{
+ aspect-ratio:1;
+ background:#28344a;
+ border-radius:8px;
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ font-size:clamp(20px,7vw,34px);
+ font-weight:900;
+ transition:background .12s;
+}
+
+.v2{background:#e7e5e4;color:#292524}
+.v4{background:#d6c5a9;color:#292524}
+.v8{background:#f5a45b;color:#fff}
+.v16{background:#f17c50;color:#fff}
+.v32{background:#ed654d;color:#fff}
+.v64{background:#df453c;color:#fff}
+.v128{background:#d7b64e;color:#fff;font-size:27px}
+.v256{background:#c9a332;color:#fff;font-size:27px}
+.v512{background:#ad8b2b;color:#fff;font-size:27px}
+.v1024{background:#9b70df;color:#fff;font-size:23px}
+.v2048{background:#7957ff;color:#fff;font-size:23px}
+.vlarge{background:#57408e;color:white;font-size:20px}
+
+.message{
+ color:#aab3c7;
+ font-size:14px;
+ margin-top:18px;
+ line-height:1.6;
+}
+
+.overlay{
+ position:fixed;
+ inset:0;
+ background:#080d18e8;
+ display:none;
+ align-items:center;
+ justify-content:center;
+ padding:20px;
+}
+
+.overlay.show{display:flex}
+
+.modal{
+ background:#151e30;
+ border:1px solid #34435c;
+ border-radius:16px;
+ padding:35px 25px;
+ width:100%;
+ max-width:350px;
+}
+
+.modal h2{margin-bottom:12px}
+.modal p{color:#aaa;margin-bottom:20px}
+
+.modal button{
+ background:#7957ff;
+ color:white;
+ padding:13px 25px;
+ border-radius:9px;
+}
+
+@media(max-width:400px){
+ .board{gap:6px;padding:7px}
+ .cell{border-radius:6px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<a href="../../index.html" class="back">← Ana Sayfaya Dön</a>
+
+<h1>🔢 <span>2048</span></h1>
+<p class="subtitle">Sayıları birleştir, 2048'e ulaş!</p>
+
+<div class="scores">
+ <div class="score-box">
+  <p>SKOR</p>
+  <strong id="score">0</strong>
+ </div>
+ <div class="score-box">
+  <p>EN YÜKSEK SKOR</p>
+  <strong id="best">0</strong>
+ </div>
+</div>
+
+<div class="top-buttons">
+ <button id="newGame">↻ Yeni Oyun</button>
+ <button id="undo">↶ Geri Al</button>
+</div>
+
+<div class="board" id="board"></div>
+
+<p class="message">
+ Aynı sayıları birleştirerek 2048'e ulaş!<br>
+ Bilgisayar: Yön tuşları veya WASD<br>
+ Telefon: Parmağınla kaydır.
+</p>
+
+</div>
+
+<div class="overlay" id="overlay">
+ <div class="modal">
+  <h2 id="modalTitle">Oyun Bitti!</h2>
+  <p id="modalText">Tekrar denemek ister misin?</p>
+  <button id="restart">Tekrar Oyna</button>
+ </div>
+</div>
+
+<script>
+const boardElement=document.getElementById("board");
+const scoreElement=document.getElementById("score");
+const bestElement=document.getElementById("best");
+const overlay=document.getElementById("overlay");
+
+let board=[];
+let score=0;
+let best=Number(localStorage.getItem("2048Best"))||0;
+let previous=null;
+let won=false;
+
+bestElement.textContent=best;
+
+function newBoard(){
+ board=Array(16).fill(0);
+ score=0;
+ previous=null;
+ won=false;
+
+ addTile();
+ addTile();
+
+ scoreElement.textContent=score;
+ overlay.classList.remove("show");
+ render();
+}
+
+function addTile(){
+ const empty=[];
+ board.forEach((value,index)=>{
+  if(value===0)empty.push(index);
+ });
+
+ if(empty.length===0)return;
+
+ const index=empty[Math.floor(Math.random()*empty.length)];
+ board[index]=Math.random()<0.9?2:4;
+}
+
+function render(){
+ boardElement.innerHTML="";
+
+ board.forEach(value=>{
+  const cell=document.createElement("div");
+  cell.className="cell";
+
+  if(value){
+   cell.textContent=value;
+   cell.classList.add(value<=2048?"v"+value:"vlarge");
+  }
+
+  boardElement.appendChild(cell);
+ });
+
+ scoreElement.textContent=score;
+ bestElement.textContent=best;
+}
+
+function savePrevious(){
+ previous={
+  board:[...board],
+  score:score
+ };
+}
+
+function undo(){
+ if(!previous)return;
+
+ board=[...previous.board];
+ score=previous.score;
+ previous=null;
+
+ overlay.classList.remove("show");
+ render();
+}
+
+function move(direction){
+ const oldBoard=[...board];
+ let gained=0;
+
+ function slide(line){
+  let values=line.filter(v=>v!==0);
+
+  for(let i=0;i<values.length-1;i++){
+   if(values[i]===values[i+1]){
+    values[i]*=2;
+    gained+=values[i];
+    values.splice(i+1,1);
+   }
+  }
+
+  while(values.length<4)values.push(0);
+  return values;
+ }
+
+ let next=Array(16).fill(0);
+
+ for(let n=0;n<4;n++){
+  let indexes=[];
+
+  if(direction==="left"||direction==="right"){
+   for(let c=0;c<4;c++)indexes.push(n*4+c);
+  }else{
+   for(let r=0;r<4;r++)indexes.push(r*4+n);
+  }
+
+  let line=indexes.map(i=>board[i]);
+
+  if(direction==="right"||direction==="down")line.reverse();
+
+  let result=slide(line);
+
+  if(direction==="right"||direction==="down")result.reverse();
+
+  indexes.forEach((index,i)=>{
+   next[index]=result[i];
+  });
+ }
+
+ if(next.every((v,i)=>v===oldBoard[i]))return;
+
+ savePrevious();
+
+ board=next;
+ score+=gained;
+
+ if(score>best){
+  best=score;
+  localStorage.setItem("2048Best",best);
+ }
+
+ addTile();
+ render();
+
+ if(!won&&board.includes(2048)){
+  won=true;
+  showModal("🎉 Harika!","2048 sayısına ulaştın! Oyuna devam edebilirsin.");
+  return;
+ }
+
+ if(!canMove()){
+  showModal("Oyun Bitti!","Skorun: "+score);
+ }
+}
+
+function canMove(){
+ if(board.includes(0))return true;
+
+ for(let r=0;r<4;r++){
+  for(let c=0;c<4;c++){
+   const i=r*4+c;
+
+   if(c<3&&board[i]===board[i+1])return true;
+   if(r<3&&board[i]===board[i+4])return true;
+  }
+ }
+
+ return false;
+}
+
+function showModal(title,text){
+ document.getElementById("modalTitle").textContent=title;
+ document.getElementById("modalText").textContent=text;
+ overlay.classList.add("show");
+}
+
+document.addEventListener("keydown",e=>{
+ const keys={
+  ArrowUp:"up",
+  ArrowDown:"down",
+  ArrowLeft:"left",
+  ArrowRight:"right",
+  w:"up",s:"down",a:"left",d:"right"
+ };
+
+ const direction=keys[e.key];
+
+ if(direction){
+  e.preventDefault();
+  move(direction);
+ }
+});
+
+let startX=0,startY=0;
+
+boardElement.addEventListener("touchstart",e=>{
+ const touch=e.touches[0];
+ startX=touch.clientX;
+ startY=touch.clientY;
+},{passive:true});
+
+boardElement.addEventListener("touchend",e=>{
+ const touch=e.changedTouches[0];
+ const dx=touch.clientX-startX;
+ const dy=touch.clientY-startY;
+
+ if(Math.max(Math.abs(dx),Math.abs(dy))<25)return;
+
+ if(Math.abs(dx)>Math.abs(dy)){
+  move(dx>0?"right":"left");
+ }else{
+  move(dy>0?"down":"up");
+ }
+},{passive:true});
+
+document.getElementById("newGame").addEventListener("click",newBoard);
+document.getElementById("undo").addEventListener("click",undo);
+document.getElementById("restart").addEventListener("click",newBoard);
+
+newBoard();
+</script>
+
+</body>
+</html>
