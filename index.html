@@ -1,0 +1,594 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PLAYZONE | Ücretsiz Online Oyunlar</title>
+<meta name="description" content="PLAYZONE ile ücretsiz ve eğlenceli online oyunlar oyna.">
+<style>
+:root {
+    --bg: #090d18;
+    --panel: #111827;
+    --panel2: #182235;
+    --accent: #7957ff;
+    --text: #f5f6ff;
+    --muted: #929bb0;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: Arial, sans-serif;
+}
+
+header {
+    height: 75px;
+    background: #0e1422;
+    border-bottom: 1px solid #222b3e;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 7%;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.logo {
+    font-size: 27px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+.logo span {
+    color: var(--accent);
+}
+
+nav {
+    display: flex;
+    gap: 28px;
+}
+
+nav a {
+    color: #c2c8d7;
+    text-decoration: none;
+    font-size: 14px;
+    transition: .2s;
+}
+
+nav a:hover {
+    color: white;
+}
+
+.auth-button { border: 1px solid #7957ff; background: #7957ff; color: white; padding: 10px 16px; border-radius: 9px; cursor: pointer; font-weight: bold; }
+.auth-modal { display:none; position:fixed; inset:0; z-index:30; background:#050812d9; place-items:center; padding:20px; }
+.auth-modal.open { display:grid; }
+.auth-box { width:min(420px,100%); background:#111827; border:1px solid #303b53; border-radius:18px; padding:28px; }
+.auth-box h2 { margin-bottom:18px; }
+.auth-box input { display:block; width:100%; padding:13px; margin:10px 0; border:1px solid #303b53; border-radius:9px; background:#090d18; color:white; }
+.auth-box button { margin-top:12px; }
+.auth-box #authClose { background:#263247; color:#fff; border:1px solid #44516a; padding:10px 18px; border-radius:9px; cursor:pointer; }
+.auth-close { background:#263247; color:#fff; border:1px solid #44516a; padding:10px 18px; border-radius:9px; cursor:pointer; }
+.dashboard { width:86%; margin:24px auto; padding:22px; border-radius:16px; background:var(--panel); display:none; }
+.stats {display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}.stat {background:#1b263a;padding:14px;border-radius:10px;min-width:130px}.stat b{display:block;color:#b8a8ff;font-size:20px;margin-top:5px}
+.dashboard input{padding:10px;background:#090d18;color:white;border:1px solid #303b53;border-radius:8px}.dashboard button{padding:10px;border-radius:8px;cursor:pointer;background:#7957ff;color:white;border:0}
+.profile-avatar{width:74px;height:74px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:12px;border:2px solid #7957ff}.friend-card{margin:10px 0;padding:13px;background:#1b263a;border-radius:10px}.friend-card img{width:38px;height:38px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:8px}
+
+.hero {
+    margin: 35px auto;
+    width: 86%;
+    min-height: 270px;
+    padding: 45px;
+    border-radius: 22px;
+    background:
+      radial-gradient(circle at 85% 20%, #7957ff66, transparent 35%),
+      linear-gradient(120deg, #171d35, #24204a);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    overflow: hidden;
+}
+
+.hero-content {
+    max-width: 540px;
+}
+
+.hero small {
+    color: #b8a8ff;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.hero h1 {
+    font-size: clamp(30px, 5vw, 48px);
+    margin: 15px 0;
+}
+
+.hero p {
+    color: #c0c5d5;
+    line-height: 1.7;
+}
+
+.hero-art {
+    font-size: 115px;
+    filter: drop-shadow(0 10px 25px #0008);
+}
+
+.primary-btn {
+    display: inline-block;
+    margin-top: 23px;
+    padding: 14px 25px;
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: bold;
+    transition: .2s;
+}
+
+.primary-btn:hover {
+    background: #9179ff;
+    transform: translateY(-2px);
+}
+
+.container {
+    width: 86%;
+    margin: 55px auto;
+}
+
+.section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.section-heading h2 {
+    font-size: 25px;
+}
+
+.section-heading p {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 7px;
+}
+
+.search {
+    width: 100%;
+    max-width: 330px;
+    background: var(--panel);
+    border: 1px solid #29344a;
+    color: white;
+    padding: 13px 16px;
+    border-radius: 10px;
+    outline: none;
+}
+
+.search:focus {
+    border-color: var(--accent);
+}
+
+.categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.category {
+    border: 1px solid #29344a;
+    color: #b8c0d2;
+    background: var(--panel);
+    padding: 10px 17px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.category:hover,
+.category.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+.games {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.game-card {
+    background: var(--panel);
+    border: 1px solid #202b40;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: .25s;
+}
+
+.game-card:hover {
+    transform: translateY(-6px);
+    border-color: #7957ff;
+    box-shadow: 0 10px 30px #0004;
+}
+
+.game-cover {
+    height: 155px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 75px;
+    position: relative;
+    background: linear-gradient(135deg, #202c48, #34275c);
+}
+
+.game-card:nth-child(3n+2) .game-cover {
+    background: linear-gradient(135deg, #163e48, #244b70);
+}
+
+.game-card:nth-child(3n) .game-cover {
+    background: linear-gradient(135deg, #482747, #30234e);
+}
+
+.game-info {
+    padding: 17px;
+}
+
+.game-info h3 {
+    font-size: 17px;
+    margin-bottom: 8px;
+}
+
+.game-info p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 17px;
+}
+
+.play-btn {
+    display: block;
+    text-align: center;
+    background: #272044;
+    color: #c9bfff;
+    padding: 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.play-btn.available {
+    background: var(--accent);
+    color: white;
+}
+
+.play-btn.disabled {
+    opacity: .65;
+    cursor: not-allowed;
+}
+
+.no-results {
+    display: none;
+    color: var(--muted);
+    padding: 35px 0;
+    text-align: center;
+    grid-column: 1 / -1;
+}
+
+footer {
+    border-top: 1px solid #222b3e;
+    text-align: center;
+    padding: 30px 15px;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 70px;
+}
+
+footer span {
+    color: var(--accent);
+}
+
+@media(max-width: 950px) {
+    .games {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media(max-width: 650px) {
+    header {
+        padding: 0 5%;
+        height: 65px;
+    }
+
+    .logo {
+        font-size: 22px;
+    }
+
+    nav {
+        gap: 12px;
+    }
+
+    nav a {
+        font-size: 12px;
+    }
+
+    .hero {
+        width: 90%;
+        padding: 30px 23px;
+        min-height: 240px;
+    }
+
+    .hero-art {
+        font-size: 65px;
+    }
+
+    .container {
+        width: 90%;
+    }
+
+    .games {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .game-cover {
+        height: 125px;
+        font-size: 55px;
+    }
+
+    .game-info {
+        padding: 12px;
+    }
+
+    .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .search {
+        max-width: 100%;
+    }
+}
+
+@media(max-width: 360px) {
+    .games {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+<body>
+
+<header>
+    <div class="logo">PLAY<span>ZONE</span></div>
+    <nav>
+        <a href="#">Ana Sayfa</a>
+        <a href="#games">Oyunlar</a>
+        <a href="#about">Hakkımızda</a>
+    </nav>
+</header>
+
+<div class="auth-modal" id="authModal"><form class="auth-box" id="authForm"><h2 id="authTitle">PLAYZONE'a katıl</h2><input id="authName" placeholder="Kullanıcı adı" required minlength="2"><input id="authEmail" type="email" placeholder="E-posta" required><input id="authPassword" type="password" placeholder="Şifre (en az 6 karakter)" required minlength="6"><button class="auth-button" type="submit">Devam et</button><button type="button" id="authClose">Kapat</button><p id="authMessage" style="margin-top:12px;color:#b8a8ff"></p></form></div>
+<section class="dashboard" id="dashboard"><img id="profileAvatar" class="profile-avatar" alt="Profil fotoğrafı"><h2 id="welcome" style="display:inline-block"></h2><p><label>Profil fotoğrafı seç <input id="avatarPicker" type="file" accept="image/*"></label></p><div class="stats"><div class="stat">Farklı oyun<b id="playedCount">0</b></div><div class="stat">Toplam oturum<b id="sessionCount">0</b></div><div class="stat">Toplam süre<b id="playedTime">0 dk</b></div></div><h3>Oynadıklarım</h3><p id="playedGames">Henüz oyun oynamadın.</p><h3 style="margin-top:18px">Arkadaşlar</h3><input id="friendInput" placeholder="Kullanıcı adı"><button id="addFriend">Arkadaş ekle</button><div id="friendList" style="margin-top:12px"></div><button id="logout" style="margin-top:15px">Çıkış yap</button></section>
+
+<section class="hero">
+    <div class="hero-content">
+        <small>PLAYZONE'A HOŞ GELDİN!</small>
+        <h1>Oyun Dünyasına<br>Adım At! 🎮</h1>
+        <p>En sevdiğin oyunları keşfet. Eğlenceye katıl, rekorları kır ve arkadaşlarınla yarış!</p>
+        <a href="#games" class="primary-btn">Oyunları Keşfet →</a>
+    </div>
+    <div class="hero-art">🎮</div>
+</section>
+
+<main class="container" id="games">
+
+    <div class="section-heading">
+        <div>
+            <h2>🎯 Oyun Koleksiyonu</h2>
+            <p>Senin için hazırladığımız oyunları keşfet.</p>
+        </div>
+        <input type="text" id="search" class="search"
+               placeholder="🔍 Oyun ara...">
+    </div>
+
+    <div class="categories">
+        <button class="category active" data-category="all">Tümü</button>
+        <button class="category" data-category="arcade">Arcade</button>
+        <button class="category" data-category="puzzle">Bulmaca</button>
+        <button class="category" data-category="action">Aksiyon</button>
+        <button class="category" data-category="classic">Klasik</button>
+    </div>
+
+    <div class="games" id="gameList">
+
+        <article class="game-card" data-category="arcade">
+            <div class="game-cover">🐤</div>
+            <div class="game-info">
+                <h3>Flappy Bird</h3>
+                <p>Uç, engellerden kaç ve rekor kır!</p>
+                <a href="games/flappy-bird/index.html"
+                   class="play-btn available">▶ Oyna</a>
+            </div>
+        </article>
+
+        <article class="game-card" data-category="classic">
+            <div class="game-cover">🐍</div>
+            <div class="game-info">
+                <h3>Snake</h3>
+                <p>Yılanını büyüt ve puan topla.</p>
+                <a href="games/snake/index.html"
+   class="play-btn available">▶ Oyna</a>
+            </div>
+        </article>
+
+        <article class="game-card" data-category="arcade">
+            <div class="game-cover">🧱</div>
+            <div class="game-info">
+                <h3>Brick Breaker</h3>
+                <p>Topla bütün tuğlaları parçala.</p>
+                <a href="games/brick-breaker/index.html"
+   class="play-btn available">▶ Oyna</a>
+            </div>
+        </article>
+
+        <article class="game-card" data-category="puzzle">
+            <div class="game-cover">🔢</div>
+            <div class="game-info">
+                <h3>2048</h3>
+                <p>Sayıları birleştir ve 2048'e ulaş.</p>
+                <a href="games/2048/index.html"
+   class="play-btn available">▶ Oyna</a>
+            </div>
+        </article>
+
+        <article class="game-card" data-category="arcade">
+            <div class="game-cover">🦸</div>
+            <div class="game-info">
+                <h3>Jump Hero</h3>
+                <p>Zıpla, engelleri aş ve ilerle.</p>
+                <a href="games/jump-hero/index.html"
+   class="play-btn available">▶ Oyna</a>
+            </div>
+        </article>
+
+        <article class="game-card" data-category="classic">
+            <div class="game-cover">👾</div>
+            <div class="game-info">
+                <h3>Maze Runner</h3>
+                <p>Labirentte yolunu bul.</p>
+                <a href="games/maze-runner/index.html"
+   class="play-btn available">▶ Oyna</a>
+            </div>
+        </article>
+
+        <article class="game-card" data-category="classic">
+            <div class="game-cover">⭕</div>
+            <div class="game-info">
+                <h3>Tic Tac Toe</h3>
+                <p>X ve O ile rakibini yen.</p>
+                <a href="games/tic-tac-toe/index.html"
+   class="play-btn available">▶ Oyna</a>
+            </div>
+        </article>
+
+        <article class="game-card" data-category="arcade">
+            <div class="game-cover">🔨</div>
+            <div class="game-info">
+                <h3>Whack a Mole</h3>
+                <p>Köstebekleri yakala ve puan kazan.</p>
+                <a href="games/whack-a-mole/index.html"
+   class="play-btn available">▶ Oyna</a>
+            </div>
+        </article>
+
+        <article class="game-card" data-category="puzzle">
+            <div class="game-cover">🃏</div>
+            <div class="game-info">
+                <h3>Memory Cards</h3>
+                <p>Gizli kartların eşlerini bul.</p>
+                <a href="games/memory-cards/index.html"
+   class="play-btn available">▶ Oyna</a>
+            </div>
+        </article>
+
+        <article class="game-card" data-category="action">
+            <div class="game-cover">🚀</div>
+            <div class="game-info">
+                <h3>Space Shooter</h3>
+                <p>Uzayda maceraya atıl.</p>
+                <a href="games/space-shooter/index.html"
+   class="play-btn available">▶ Oyna</a>
+            </div>
+        </article>
+
+        <article class="game-card" data-category="puzzle"><div class="game-cover">✊</div><div class="game-info"><h3>Sayı Tahmin</h3><p>1 ile 100 arasındaki gizli sayıyı bul.</p><a href="games/number-guess/index.html" class="play-btn available">▶ Oyna</a></div></article>
+        <article class="game-card" data-category="arcade"><div class="game-cover">⚡</div><div class="game-info"><h3>Tepki Testi</h3><p>Yeşil ışık yanınca olabildiğince hızlı tıkla.</p><a href="games/reaction-test/index.html" class="play-btn available">▶ Oyna</a></div></article>
+        <article class="game-card" data-category="puzzle"><div class="game-cover">🧠</div><div class="game-info"><h3>Taş Kağıt Makas</h3><p>Bilgisayara karşı üç tur oyna.</p><a href="games/rock-paper-scissors/index.html" class="play-btn available">▶ Oyna</a></div></article>
+        <article class="game-card" data-category="arcade"><div class="game-cover">🎯</div><div class="game-info"><h3>Hedef Vurma</h3><p>30 saniyede hedeflere tıklayıp puan topla.</p><a href="games/target-clicker/index.html" class="play-btn available">▶ Oyna</a></div></article>
+        <article class="game-card" data-category="puzzle"><div class="game-cover">🔤</div><div class="game-info"><h3>Kelime Karıştırma</h3><p>Karışık harflerden doğru kelimeyi bul.</p><a href="games/word-scramble/index.html" class="play-btn available">▶ Oyna</a></div></article>
+        <article class="game-card" data-category="classic"><div class="game-cover">🪙</div><div class="game-info"><h3>Yazı Tura</h3><p>Tahminini yap, şansını dene.</p><a href="games/coin-flip/index.html" class="play-btn available">▶ Oyna</a></div></article>
+        <article class="game-card" data-category="puzzle"><div class="game-cover">🔐</div><div class="game-info"><h3>Mini Sudoku</h3><p>4×4 tabloda 1–4 sayılarını tamamla.</p><a href="games/mini-sudoku/index.html" class="play-btn available">▶ Oyna</a></div></article>
+        <article class="game-card" data-category="arcade"><div class="game-cover">🟢</div><div class="game-info"><h3>Renk Hafızası</h3><p>Renk sırasını hatırla ve tekrar et.</p><a href="games/color-memory/index.html" class="play-btn available">▶ Oyna</a></div></article>
+        <article class="game-card" data-category="classic"><div class="game-cover">🎲</div><div class="game-info"><h3>Zar Düellosu</h3><p>Bilgisayardan yüksek zar at.</p><a href="games/dice-duel/index.html" class="play-btn available">▶ Oyna</a></div></article>
+        <article class="game-card" data-category="arcade"><div class="game-cover">🟠</div><div class="game-info"><h3>Balon Patlat</h3><p>30 saniyede ekrandaki balonlara tıkla.</p><a href="games/balloon-pop/index.html" class="play-btn available">▶ Oyna</a></div></article>
+
+        <div class="no-results" id="noResults">
+            Aradığın oyun bulunamadı. 😕
+        </div>
+
+    </div>
+</main>
+
+<footer id="about">
+    <p>© 2026 <span>PLAYZONE</span> — Tüm hakları saklıdır.</p>
+    <p style="margin-top:8px">Eğlencenin yeni adresi!</p>
+</footer>
+
+<script>
+const modal=document.getElementById('authModal'), dashboard=document.getElementById('dashboard');
+const authButton=document.createElement('button'); authButton.className='auth-button'; document.querySelector('header').append(authButton);
+const getUsers=()=>JSON.parse(localStorage.getItem('playzone-users')||'{}');
+function refreshProfile(){const email=localStorage.getItem('playzone-email');if(!email){dashboard.style.display='none';authButton.textContent='Giriş / Kayıt';return}const users=getUsers(),user=users[email];if(!user)return;dashboard.style.display='block';authButton.textContent='👤 '+user.name;document.getElementById('welcome').textContent='Merhaba, '+user.name+'!';document.getElementById('profileAvatar').src=user.avatar||'https://api.dicebear.com/9.x/thumbs/svg?seed='+encodeURIComponent(user.name);document.getElementById('playedCount').textContent=Object.keys(user.games||{}).length;document.getElementById('sessionCount').textContent=Object.values(user.games||{}).reduce((a,b)=>a+b.count,0);const mins=Math.floor((user.seconds||0)/60);document.getElementById('playedTime').textContent=Math.floor(mins/60)+' sa '+mins%60+' dk';document.getElementById('playedGames').textContent=Object.entries(user.games||{}).map(([title,data])=>`${title}: ${data.count} kez · ${Math.floor((data.seconds||0)/60)} dk`).join(' · ')||'Henüz oyun oynamadın.';const friends=(user.friends||[]).map(name=>{const f=Object.values(users).find(x=>x.name.toLowerCase()===name.toLowerCase());if(!f)return `<div class="friend-card">${name} — profil bulunamadı</div>`;const fm=Math.floor((f.seconds||0)/60),plays=Object.values(f.games||{}).reduce((n,g)=>n+g.count,0);return `<div class="friend-card"><img src="${f.avatar||'https://api.dicebear.com/9.x/thumbs/svg?seed='+encodeURIComponent(f.name)}" alt="">${f.name} · ${Math.floor(fm/60)} sa ${fm%60} dk · ${Object.keys(f.games||{}).length} oyun · ${plays} kez</div>`}).join('');document.getElementById('friendList').innerHTML=friends||'Henüz arkadaş eklemedin.';}
+document.getElementById('avatarPicker').onchange=e=>{const file=e.target.files[0],email=localStorage.getItem('playzone-email');if(!file||!email)return;const reader=new FileReader();reader.onload=()=>{const users=getUsers();users[email].avatar=reader.result;localStorage.setItem('playzone-users',JSON.stringify(users));refreshProfile()};reader.readAsDataURL(file)};
+authButton.onclick=()=>modal.classList.add('open'); document.getElementById('authClose').onclick=()=>modal.classList.remove('open');modal.onclick=e=>{if(e.target===modal)modal.classList.remove('open')};
+document.getElementById('authForm').onsubmit=e=>{e.preventDefault();const name=document.getElementById('authName').value.trim(),email=document.getElementById('authEmail').value.trim().toLowerCase(),password=document.getElementById('authPassword').value;const users=getUsers();if(users[email]&&users[email].password!==password){document.getElementById('authMessage').textContent='Şifre hatalı.';return}if(!users[email])users[email]={name,password,games:{},friends:[],seconds:0};localStorage.setItem('playzone-users',JSON.stringify(users));localStorage.setItem('playzone-email',email);document.getElementById('authMessage').textContent='Giriş başarılı!';modal.classList.remove('open');refreshProfile()};
+document.getElementById('addFriend').onclick=()=>{const email=localStorage.getItem('playzone-email'),friend=document.getElementById('friendInput').value.trim(),users=getUsers();if(!email||!friend)return;const found=Object.values(users).find(u=>u.name.toLowerCase()===friend.toLowerCase());if(!found){document.getElementById('friendList').textContent='Bu kullanıcı bu tarayıcıda bulunamadı.';return}if(found.name===users[email].name){document.getElementById('friendList').textContent='Kendini arkadaş ekleyemezsin.';return}users[email].friends=users[email].friends||[];if(!users[email].friends.includes(found.name))users[email].friends.push(found.name);localStorage.setItem('playzone-users',JSON.stringify(users));refreshProfile()};
+document.getElementById('logout').onclick=()=>{localStorage.removeItem('playzone-email');refreshProfile()};refreshProfile();
+document.querySelectorAll('.play-btn.available').forEach(link=>{link.addEventListener('click',()=>{const email=localStorage.getItem('playzone-email');if(!email)return;const users=getUsers(),title=link.closest('.game-card').querySelector('h3').textContent,user=users[email];user.games=user.games||{};user.games[title]=user.games[title]||{count:0,seconds:0};user.games[title].count++;user.activeGame={title,since:Date.now()};localStorage.setItem('playzone-users',JSON.stringify(users))})});
+window.addEventListener('beforeunload',()=>{const email=localStorage.getItem('playzone-email');if(!email)return;const users=getUsers(),user=users[email];if(user?.activeGame){const elapsed=Math.floor((Date.now()-user.activeGame.since)/1000);user.seconds=(user.seconds||0)+elapsed;user.games[user.activeGame.title].seconds=(user.games[user.activeGame.title].seconds||0)+elapsed;delete user.activeGame;localStorage.setItem('playzone-users',JSON.stringify(users))}});
+const search = document.getElementById("search");
+const cards = document.querySelectorAll(".game-card");
+const buttons = document.querySelectorAll(".category");
+const noResults = document.getElementById("noResults");
+
+let activeCategory = "all";
+
+function filterGames() {
+    const term = search.value.toLocaleLowerCase("tr-TR");
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+        const name = card.querySelector("h3")
+            .textContent.toLocaleLowerCase("tr-TR");
+
+        const matchesName = name.includes(term);
+        const matchesCategory =
+            activeCategory === "all" ||
+            card.dataset.category === activeCategory;
+
+        const visible = matchesName && matchesCategory;
+
+        card.style.display = visible ? "block" : "none";
+
+        if (visible) visibleCount++;
+    });
+
+    noResults.style.display =
+        visibleCount === 0 ? "block" : "none";
+}
+
+search.addEventListener("input", filterGames);
+
+buttons.forEach(button => {
+    button.addEventListener("click", () => {
+        buttons.forEach(b => b.classList.remove("active"));
+        button.classList.add("active");
+
+        activeCategory = button.dataset.category;
+        filterGames();
+    });
+});
+</script>
+
+</body>
+</html>
