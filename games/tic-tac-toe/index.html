@@ -235,7 +235,7 @@ function play(index){
  if(gameOver||botThinking||board[index])return;
  if(isBotMode()&&current==="O")return;
 
- makeMove(index,"X");
+ makeMove(index,current);
 
  if(gameOver)return;
 
